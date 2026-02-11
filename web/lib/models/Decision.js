@@ -11,6 +11,10 @@ const DecisionSchema = new mongoose.Schema({
     required: true,
     enum: ['meal', 'task']
   },
+  question: {
+    type: String,
+    default: 'Personalized suggestion'
+  },
   context: {
     weather: { type: String, default: null },
     time: { type: String, default: null },
@@ -23,6 +27,11 @@ const DecisionSchema = new mongoose.Schema({
   aiSuggestion: {
     type: String,
     default: null
+  },
+  providerUsed: {
+    type: String,
+    enum: ['openrouter', 'groq', 'anthropic', 'fallback'],
+    default: 'openrouter'
   },
   confidence: {
     type: Number,

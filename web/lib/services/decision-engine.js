@@ -1,6 +1,7 @@
 import User from '../models/User.js';
 import Decision from '../models/Decision.js';
 import Feedback from '../models/Feedback.js';
+import User from '../models/User.js';
 import { connectDB } from './mongodb.js';
 import {
   getAISuggestion,
@@ -13,7 +14,7 @@ import {
   blendOptions
 } from '../utils/learning.js';
 
-export async function getRecommendation(userId, type, context) {
+export async function getRecommendation(userId, type, context, question) {
   // Ensure DB connection
   await connectDB();
 
@@ -27,9 +28,9 @@ export async function getRecommendation(userId, type, context) {
   const preferences = user.preferences || { meal: {}, task: {} };
 
   // Get AI suggestion
-  let aiSuggestion = null;
+  let aiSuggestionData = null;
   try {
-    aiSuggestion = await getAISuggestion(userId, type, context, preferences);
+    aiSuggestionData = await getAISuggestion(userId, type, context, preferences, user.preferredProvider);
   } catch (error) {
     console.error('AI suggestion failed:', error);
   }
@@ -45,9 +46,12 @@ export async function getRecommendation(userId, type, context) {
 
   // Calculate confidence
   const primaryOption = options[0];
-  const confidence = aiSuggestion
+  const confidence = aiSuggestionData?.suggestion
     ? Math.max(0.7, calculateConfidence(preferences, primaryOption, type))
     : calculateConfidence(preferences, primaryOption, type);
+
+  const decisionQuestion = question?.trim() || (type === 'meal' ? 'What should I eat today?' : 'What should I do today?');
+  const provider = aiSuggestionData?.provider || 'fallback';
 
   // Create decision document
   const decision = new Decision({
@@ -55,8 +59,10 @@ export async function getRecommendation(userId, type, context) {
     type,
     context,
     options,
-    aiSuggestion,
-    confidence
+    aiSuggestion: aiSuggestionData?.suggestion || null,
+    confidence,
+    question: decisionQuestion,
+    providerUsed: provider
   });
 
   await decision.save();
@@ -64,9 +70,11 @@ export async function getRecommendation(userId, type, context) {
   return {
     decisionId: decision._id.toString(),
     options,
-    aiSuggestion,
+    aiSuggestion: aiSuggestionData?.suggestion || null,
     confidence,
-    type
+    type,
+    question: decisionQuestion,
+    providerUsed: provider
   };
 }
 
@@ -143,4 +151,23 @@ export async function getUserStats(userId) {
       task: getTopOptions(user?.preferences || {}, 'task', 3)
     }
   };
+}
+
+export async function getUserHistory(userId, limit = 6) {
+  await connectDB();
+  const history = await Decision.find({ userId })
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .lean();
+
+  return history.map((decision) => ({
+    decisionId: decision._id.toString(),
+    type: decision.type,
+    question: decision.question,
+    aiSuggestion: decision.aiSuggestion,
+    options: decision.options,
+    confidence: decision.confidence,
+    providerUsed: decision.providerUsed,
+    createdAt: decision.createdAt
+  }));
 }

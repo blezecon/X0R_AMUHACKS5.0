@@ -13,7 +13,7 @@ if (!JWT_SECRET) {
 }
 
 // Email transporter setup
-const transporter = nodemailer.createTransporter({
+const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: process.env.GMAIL_USER,
@@ -50,7 +50,7 @@ async function sendOTPEmail(email, otp, name) {
   await transporter.sendMail(mailOptions);
 }
 
-export async function registerUser(name, email, password, apiKeys = {}) {
+export async function registerUser(name, email, password, apiKeys = {}, preferredProvider = 'openrouter') {
   // Ensure DB connection
   await connectDB();
 
@@ -87,7 +87,9 @@ export async function registerUser(name, email, password, apiKeys = {}) {
     },
     isEmailVerified: false,
     otpCode,
-    otpExpiresAt
+    otpExpiresAt,
+    preferredProvider,
+    onboarded: false
   });
 
   await user.save();
@@ -143,6 +145,9 @@ export async function verifyOTP(email, otp) {
     token,
     email: user.email,
     name: user.name,
+    onboarded: user.onboarded,
+    preferredProvider: user.preferredProvider,
+    profilePhoto: user.profilePhoto,
     message: 'Email verified successfully'
   };
 }
@@ -204,7 +209,44 @@ export async function loginUser(email, password) {
     userId: user._id.toString(),
     token,
     email: user.email,
-    name: user.name
+    name: user.name,
+    onboarded: user.onboarded,
+    preferredProvider: user.preferredProvider,
+    profilePhoto: user.profilePhoto
+  };
+}
+
+export async function completeOnboarding(userId, { provider, apiKey, profilePhoto, skip }) {
+  await connectDB();
+
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  if (provider) {
+    user.preferredProvider = provider;
+  }
+
+  if (apiKey && provider) {
+    user.encryptedApiKeys.set(provider, encrypt(apiKey));
+  }
+
+  if (profilePhoto) {
+    user.profilePhoto = profilePhoto;
+  }
+
+  user.onboarded = true;
+  user.updatedAt = new Date();
+
+  await user.save();
+
+  return {
+    userId: user._id.toString(),
+    profilePhoto: user.profilePhoto,
+    preferredProvider: user.preferredProvider,
+    onboarded: user.onboarded
   };
 }
 

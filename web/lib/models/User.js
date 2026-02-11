@@ -49,14 +49,28 @@ const UserSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
+  profilePhoto: {
+    type: String,
+    default: null
+  },
+  preferredProvider: {
+    type: String,
+    enum: ['openrouter', 'groq', 'anthropic', 'fallback'],
+    default: 'openrouter'
+  },
+  onboarded: {
+    type: Boolean,
+    default: false
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  },
   createdAt: {
     type: Date,
     default: Date.now
   }
 });
-
-// Create index on email for faster lookups
-UserSchema.index({ email: 1 });
 
 // Prevent overwriting model in hot reload
 const User = mongoose.models.User || mongoose.model('User', UserSchema);

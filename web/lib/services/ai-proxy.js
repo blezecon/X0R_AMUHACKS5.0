@@ -54,9 +54,10 @@ Respond with ONLY the task description, nothing else.`;
   }
 }
 
-export async function getAISuggestion(userId, type, context, userPreferences) {
+export async function getAISuggestion(userId, type, context, userPreferences, preferredProvider = 'openrouter') {
   try {
-    const apiKey = await getDecryptedApiKey(userId, 'openrouter');
+    const provider = preferredProvider || 'openrouter';
+    const apiKey = await getDecryptedApiKey(userId, provider);
     
     if (!apiKey) {
       console.log('No API key found for user, using fallback');

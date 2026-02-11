@@ -1,67 +1,71 @@
 'use client';
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Brain, Menu, X, User, LogOut } from 'lucide-react';
+import { Cpu, Menu, X, LogOut } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+
+const NAV_LINKS = [
+  { label: 'Home', href: '/' },
+  { label: 'Features', href: '/features' },
+  { label: 'About', href: '/about' },
+];
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [auth, setAuth] = useState({ isLoggedIn: false, userName: '' });
   const [mounted, setMounted] = useState(false);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
-    // Defer state updates to next tick to avoid cascading renders
     const timer = setTimeout(() => {
-      // Mark as mounted
       setMounted(true);
-      
-      // Check auth state
+
       const checkAuth = () => {
         const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-        const name = typeof window !== 'undefined' ? localStorage.getItem('name') : null;
-        setAuth({ isLoggedIn: !!token, userName: name || 'User' });
+        const name = typeof window !== 'undefined' ? localStorage.getItem('name') : 'You';
+        setAuth({ isLoggedIn: !!token, userName: name });
       };
-      
+
       checkAuth();
-      
-      // Listen for storage changes (for multi-tab sync)
-      const handleStorageChange = () => {
-        checkAuth();
+
+      const handleAuth = () => checkAuth();
+      const handleClickOutside = (event) => {
+        if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+          setIsDropdownOpen(false);
+        }
       };
-      
-      window.addEventListener('storage', handleStorageChange);
-      
-      // Custom event for same-tab updates
-      window.addEventListener('auth-change', handleStorageChange);
-      
-      // Cleanup function
+
+      window.addEventListener('storage', handleAuth);
+      window.addEventListener('auth-change', handleAuth);
+      window.addEventListener('click', handleClickOutside);
+
       return () => {
-        window.removeEventListener('storage', handleStorageChange);
-        window.removeEventListener('auth-change', handleStorageChange);
+        window.removeEventListener('storage', handleAuth);
+        window.removeEventListener('auth-change', handleAuth);
+        window.removeEventListener('click', handleClickOutside);
       };
     }, 0);
-    
+
     return () => clearTimeout(timer);
   }, []);
 
   const handleLogout = () => {
     localStorage.clear();
-    setAuth({ isLoggedIn: false, userName: '' });
+    window.dispatchEvent(new Event('auth-change'));
     window.location.href = '/';
   };
 
-  // Prevent hydration mismatch by rendering a simpler version initially
   if (!mounted) {
     return (
       <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4">
           <div className="flex h-16 items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <Brain className="h-6 w-6 text-primary" />
+              <Cpu className="h-6 w-6 text-primary" />
               <span className="text-xl font-bold">Decision Fatigue Reducer</span>
             </Link>
-            {/* Skeleton loader for auth buttons */}
             <div className="hidden md:flex items-center gap-3">
               <div className="h-9 w-20 bg-muted rounded animate-pulse" />
               <div className="h-9 w-24 bg-muted rounded animate-pulse" />
@@ -72,42 +76,74 @@ export function Navbar() {
     );
   }
 
+  const initials = (auth.userName || 'You')
+    .split(' ')
+    .map((word) => word[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
+  const menuItems = [
+    { label: 'Dashboard', href: '/decide' },
+    { label: 'Settings', href: '/settings' },
+  ];
+
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
-          {/* Logo */}
+        <div className="flex h-16 items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <Brain className="h-6 w-6 text-primary" />
+            <Cpu className="h-6 w-6 text-primary" />
             <span className="text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
               Decision Fatigue Reducer
             </span>
           </Link>
 
-          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-6">
-            <Link href="/" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              Home
-            </Link>
-            <Link href="/features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              Features
-            </Link>
-            <Link href="/about" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              About
-            </Link>
-            
+            {NAV_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {link.label}
+              </Link>
+            ))}
+
             {auth.isLoggedIn ? (
-              <div className="flex items-center gap-4">
-                <Link href="/decide">
-                  <Button variant="ghost" size="sm" className="gap-2">
-                    <User className="h-4 w-4" />
-                    {auth.userName}
-                  </Button>
-                </Link>
-                <Button variant="outline" size="sm" onClick={handleLogout} className="gap-2">
-                  <LogOut className="h-4 w-4" />
-                  Logout
-                </Button>
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setIsDropdownOpen((prev) => !prev)}
+                  className="transition-transform hover:translate-y-0.5"
+                  aria-haspopup="true"
+                  aria-expanded={isDropdownOpen}
+                >
+                  <Avatar>
+                    <AvatarFallback>{initials}</AvatarFallback>
+                  </Avatar>
+                </button>
+
+                {isDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-40 rounded-xl border border-border bg-card p-3 text-sm shadow-lg shadow-primary/20">
+                    {menuItems.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setIsDropdownOpen(false)}
+                        className="flex items-center gap-2 rounded-md px-2 py-2 font-medium text-foreground hover:bg-accent"
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                    <button
+                      onClick={handleLogout}
+                      className="mt-2 flex w-full items-center gap-2 rounded-md border border-border px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide text-destructive shadow-sm shadow-destructive/10"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Logout
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="flex items-center gap-3">
@@ -125,59 +161,54 @@ export function Navbar() {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
           <button
             className="md:hidden p-2 rounded-md hover:bg-accent"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            onClick={() => setIsMenuOpen((prev) => !prev)}
           >
             {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
         </div>
 
-        {/* Mobile Menu */}
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t">
-            <div className="flex flex-col gap-4">
-              <Link 
-                href="/" 
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Home
-              </Link>
-              <Link 
-                href="/features" 
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Features
-              </Link>
-              <Link 
-                href="/about" 
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                About
-              </Link>
-              
+            <div className="flex flex-col gap-3">
+              {NAV_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {link.label}
+                </Link>
+              ))}
+
               {auth.isLoggedIn ? (
                 <>
-                  <Link 
-                    href="/decide" 
+                  <Link
+                    href="/decide"
                     className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Dashboard
                   </Link>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => { handleLogout(); setIsMenuOpen(false); }}
-                    className="gap-2 justify-start"
+                  <Link
+                    href="/settings"
+                    className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Settings
+                  </Link>
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setIsMenuOpen(false);
+                    }}
+                    className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-left text-sm font-medium text-destructive"
                   >
                     <LogOut className="h-4 w-4" />
                     Logout
-                  </Button>
+                  </button>
                 </>
               ) : (
                 <div className="flex flex-col gap-2 px-2">

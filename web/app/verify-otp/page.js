@@ -87,15 +87,17 @@ export default function VerifyOTPPage() {
       localStorage.setItem('userId', result.data.userId);
       localStorage.setItem('email', result.data.email);
       localStorage.setItem('name', result.data.name);
+      localStorage.setItem('onboarded', result.data.onboarded ? 'true' : 'false');
 
       // Clear pending verification
       localStorage.removeItem('pendingVerificationEmail');
 
       setSuccess(true);
 
-      // Redirect to dashboard after a short delay
+      const destination = result.data.onboarded ? '/decide' : '/onboarding';
+      // Redirect to next step after a short delay
       setTimeout(() => {
-        router.push('/decide');
+        router.push(destination);
       }, 2000);
     } catch (err) {
       setError(err.message);

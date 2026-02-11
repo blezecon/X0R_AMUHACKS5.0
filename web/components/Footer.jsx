@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Brain, Github, Twitter, Mail, Heart } from 'lucide-react';
+import { Cpu, Github, Twitter, Mail, Heart } from 'lucide-react';
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -13,7 +13,7 @@ export function Footer() {
           {/* Brand */}
           <div className="md:col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <Brain className="h-6 w-6 text-primary" />
+              <Cpu className="h-6 w-6 text-primary" />
               <span className="text-lg font-bold">Decision Fatigue Reducer</span>
             </Link>
             <p className="text-sm text-muted-foreground max-w-sm mb-4">

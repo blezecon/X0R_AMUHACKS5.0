@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Brain, RefreshCw, MapPin, Sparkles } from 'lucide-react';
+import { Cpu, RefreshCw, MapPin, Sparkles } from 'lucide-react';
 
 export default function DecidePage() {
   const router = useRouter();
@@ -117,7 +117,7 @@ export default function DecidePage() {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center">
-          <Brain className="w-12 h-12 mx-auto mb-4 text-primary animate-pulse" />
+          <Cpu className="w-12 h-12 mx-auto mb-4 text-primary animate-pulse" />
           <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
@@ -175,7 +175,7 @@ export default function DecidePage() {
                 {loading ? (
                   <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                 ) : (
-                  <Brain className="w-4 h-4 mr-2" />
+                  <Cpu className="w-4 h-4 mr-2" />
                 )}
                 {loading ? 'Thinking...' : 'Get Recommendation'}
               </Button>

@@ -6,6 +6,7 @@ const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(100),
   email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
+  preferredProvider: z.enum(['openrouter', 'groq', 'anthropic']).optional(),
   apiKeys: z.object({
     openrouter: z.string().optional(),
     groq: z.string().optional(),
@@ -16,9 +17,9 @@ const registerSchema = z.object({
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { name, email, password, apiKeys } = registerSchema.parse(body);
+    const { name, email, password, apiKeys, preferredProvider } = registerSchema.parse(body);
     
-    const result = await registerUser(name, email, password, apiKeys);
+    const result = await registerUser(name, email, password, apiKeys, preferredProvider);
     
     return NextResponse.json({
       success: true,

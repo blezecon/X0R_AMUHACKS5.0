@@ -2,30 +2,31 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
-  Brain, 
+  Cpu, 
   Zap, 
   Shield, 
-  Sparkles, 
+  Star, 
   Clock, 
   LineChart, 
   ArrowRight,
   CheckCircle2,
   Utensils,
   CheckSquare,
-  Thermometer
+  Thermometer,
+  Sparkles
 } from 'lucide-react';
 
 export default function LandingPage() {
   const features = [
     {
-      icon: Brain,
+      icon: Cpu,
       title: 'AI-Powered Decisions',
       description: 'Smart recommendations that learn from your preferences and reduce decision fatigue'
     },
     {
       icon: Zap,
       title: 'Save Mental Energy',
-      description: 'Stop wasting brainpower on small daily decisions. Focus on what truly matters.'
+      description: 'Stop wasting Cpupower on small daily decisions. Focus on what truly matters.'
     },
     {
       icon: Shield,
@@ -97,7 +98,7 @@ export default function LandingPage() {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-8">
-              <Sparkles className="h-4 w-4" />
+              <Star className="h-4 w-4" />
               AI-Powered Daily Decisions
             </div>
             
@@ -278,7 +279,7 @@ export default function LandingPage() {
                 <CardContent className="pt-6">
                   <div className="flex gap-1 mb-4">
                     {[...Array(5)].map((_, i) => (
-                      <Sparkles key={i} className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                      <Star key={i} className="h-4 w-4 text-yellow-500 fill-yellow-500" />
                     ))}
                   </div>
                   <p className="text-muted-foreground mb-4 italic">&ldquo;{testimonial.quote}&rdquo;</p>
