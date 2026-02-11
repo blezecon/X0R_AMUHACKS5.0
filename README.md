@@ -12,6 +12,15 @@
 [![Website](https://img.shields.io/badge/Website-@blezecon-181717?style=for-the-badge&logo=github)](https://github.com/blezecon) <br>
 [![Mobile App](https://img.shields.io/badge/Mobile_App-@NoE114-181717?style=for-the-badge&logo=github)](https://github.com/NoE114)
 
+## 🖼️ Screenshots
+
+### Landing Page
+![Landing Page](./extra/landing.png)
+
+### Lighthouse Performance (May decrease or increase the value)
+![Lighthouse Performance](./extra/light-house.png)
+
+
 ## 🚀 What is this?
 
 **SWIFTION** is an AI-powered web application that helps you make daily decisions without the mental exhaustion. Whether it's:
