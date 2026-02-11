@@ -35,8 +35,10 @@ export default function SettingsPage() {
   const [apiKey, setApiKey] = useState('');
   const [showKey, setShowKey] = useState(false);
   const [hasSavedKey, setHasSavedKey] = useState(false);
-  const [status, setStatus] = useState('idle');
-  const [statusMessage, setStatusMessage] = useState('');
+  const [profileStatus, setProfileStatus] = useState('idle');
+  const [profileMessage, setProfileMessage] = useState('');
+  const [providerStatus, setProviderStatus] = useState('idle');
+  const [providerMessage, setProviderMessage] = useState('');
   const [name, setName] = useState('');
   const [profilePhotoData, setProfilePhotoData] = useState('');
   const [profilePhotoPreview, setProfilePhotoPreview] = useState('');
@@ -127,52 +129,82 @@ export default function SettingsPage() {
     setPhotoError('');
   };
 
-  const handleSave = async () => {
+  const patchProviderSettings = async (payload) => {
+    if (!token) throw new Error('Missing auth token');
+    const response = await fetch('/api/auth/provider-settings', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.error || 'Could not save settings');
+    }
+    return result.data;
+  };
+
+  const handleProfileSave = async () => {
     if (!token) return;
-    setStatus('loading');
-    setStatusMessage('');
-    const providerToSave = preferredProvider;
-    const trimmedKey = apiKey.trim();
+    setProfileStatus('loading');
+    setProfileMessage('');
     const trimmedName = name.trim();
     try {
-      const response = await fetch('/api/auth/provider-settings', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          provider: providerToSave,
-          apiKey: trimmedKey || undefined,
-          name: trimmedName || undefined,
-          profilePhoto: profilePhotoData || undefined
-        })
+      const result = await patchProviderSettings({
+        provider: preferredProvider,
+        name: trimmedName || undefined,
+        profilePhoto: profilePhotoData || undefined
       });
-
-      const result = await response.json();
-      if (!result.success) throw new Error(result.error || 'Could not save settings');
-      setStatus('success');
-      setStatusMessage(`Saved ${PROVIDERS[providerToSave].label}`);
-      setShowKey(false);
-      setApiKey('');
-      setProfilePhotoData(profilePhotoPreview);
-      await fetchProvider(token, providerToSave);
+      const photo = result.profilePhoto || '';
+      if (photo) {
+        setProfilePhotoPreview(photo);
+        setProfilePhotoData(photo);
+      }
+      setName(result.name || trimmedName);
+      setProfileStatus('success');
+      setProfileMessage('Profile saved');
       if (typeof window !== 'undefined') {
-        if (result.data.name) {
-          localStorage.setItem('name', result.data.name);
-        }
-        if (result.data.profilePhoto) {
-          localStorage.setItem('profilePhoto', result.data.profilePhoto);
+        const storedName = result.name || trimmedName;
+        localStorage.setItem('name', storedName);
+        if (photo) {
+          localStorage.setItem('profilePhoto', photo);
         } else {
           localStorage.removeItem('profilePhoto');
         }
         window.dispatchEvent(new Event('auth-change'));
       }
-      setTimeout(() => setStatus('idle'), 1500);
+      setTimeout(() => setProfileStatus('idle'), 1500);
     } catch (error) {
       console.error(error);
-      setStatus('error');
-      setStatusMessage('Update failed');
+      setProfileStatus('error');
+      setProfileMessage('Profile save failed');
+    }
+  };
+
+  const handleProviderSave = async () => {
+    if (!token) return;
+    setProviderStatus('loading');
+    setProviderMessage('');
+    const trimmedKey = apiKey.trim();
+    const payload = { provider: preferredProvider };
+    if (trimmedKey) {
+      payload.apiKey = trimmedKey;
+    }
+    try {
+      await patchProviderSettings(payload);
+      setProviderStatus('success');
+      setProviderMessage(`Saved ${PROVIDERS[preferredProvider].label}`);
+      setShowKey(false);
+      setApiKey('');
+      await fetchProvider(token, preferredProvider);
+      setTimeout(() => setProviderStatus('idle'), 1500);
+    } catch (error) {
+      console.error(error);
+      setProviderStatus('error');
+      setProviderMessage('Provider save failed');
     }
   };
 
@@ -216,16 +248,20 @@ export default function SettingsPage() {
                 <p className="text-sm text-muted-foreground">Keep your preferences in sync with your routine.</p>
               </div>
             </div>
-            <Button variant="outline" size="sm" className="gap-2" onClick={() => router.push('/dashboard')}>
+            <button
+              type="button"
+              onClick={() => router.push('/dashboard')}
+              className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground transition hover:text-foreground"
+            >
               <SettingsIcon className="h-4 w-4" />
-              Back to Dashboard
-            </Button>
+              Dashboard
+            </button>
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-2">
-            <Card>
-              <CardContent>
-                <div className="grid gap-4">
+          <div className="grid gap-6 lg:grid-cols-2 items-stretch">
+            <Card className="h-full flex flex-col">
+              <CardContent className="flex flex-col gap-6 flex-1">
+                <div className="flex-1 space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="settings-name">Full name</Label>
                     <Input
@@ -271,78 +307,86 @@ export default function SettingsPage() {
                     />
                   </div>
                 </div>
+                <div className="flex items-center justify-between gap-3">
+                  <Button
+                    onClick={handleProfileSave}
+                    className="flex-shrink-0 rounded-2xl border-none px-6 from-primary to-secondary/80 text-sm font-semibold"
+                    disabled={profileStatus === 'loading'}
+                  >
+                    {profileStatus === 'loading' ? 'Saving…' : 'Save profile'}
+                  </Button>
+                  <p className="flex-1 truncate text-xs text-muted-foreground">
+                    {profileMessage || 'Name and photo power your avatar.'}
+                  </p>
+                </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-card/80 border border-border/60">
-              <CardHeader className="space-y-2">
-                <CardTitle className="text-lg font-semibold">AI Providers</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Toggle between providers, securely store API keys, and keep everything encrypted on our servers.
-                </p>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid gap-3 md:grid-cols-3">
-                  {Object.entries(PROVIDERS).map(([key, provider]) => {
-                    const isSelected = preferredProvider === key;
-                    const isActive = activeProvider === key;
-                    return (
+            <Card className="h-full flex flex-col bg-card/80 border border-border/60">
+              <CardContent className="flex flex-col gap-6 flex-1">
+                <div className="flex-1 space-y-6">
+                  <div className="grid gap-3 md:grid-cols-3">
+                    {Object.entries(PROVIDERS).map(([key, provider]) => {
+                      const isSelected = preferredProvider === key;
+                      const isActive = activeProvider === key;
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => handleProviderSelect(key)}
+                          className={`flex flex-col gap-1 rounded-2xl border p-4 text-left transition ${
+                            isSelected
+                              ? 'border-primary/80 bg-primary/10 shadow-lg shadow-primary/30'
+                              : 'border-border/40 bg-background/60 hover:border-primary/70'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between text-xs uppercase tracking-[0.4em] text-muted-foreground">
+                            <span>Provider</span>
+                          </div>
+                          <h3 className="text-lg font-semibold text-foreground">{provider.label}</h3>
+                          <p className="text-xs text-muted-foreground">{provider.description}</p>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm font-semibold text-foreground">
+                      <span>API Key</span>
+                      <span className="text-xs text-muted-foreground">Encrypted + per provider</span>
+                    </div>
+                    <div className="relative">
+                      <Input
+                        id="settings-api-key"
+                        type={showKey ? 'text' : 'password'}
+                        value={apiKey}
+                        onChange={(event) => setApiKey(event.target.value)}
+                        className="rounded-2xl border border-border/60 bg-background/60 px-4 py-3 text-sm pr-12"
+                        disabled={providerLoading}
+                      />
                       <button
-                        key={key}
                         type="button"
-                        onClick={() => handleProviderSelect(key)}
-                        className={`flex flex-col gap-1 rounded-2xl border p-4 text-left transition ${
-                          isSelected
-                            ? 'border-primary/80 bg-primary/10 shadow-lg shadow-primary/30'
-                            : 'border-border/40 bg-background/60 hover:border-primary/70'
-                        }`}
+                        onClick={toggleShowKey}
+                        aria-label={showKey ? 'Hide API key' : 'Show API key'}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary/70"
+                        disabled={providerLoading}
                       >
-                        <div className="flex items-center justify-between text-xs uppercase tracking-[0.4em] text-muted-foreground">
-                          <span>Provider</span>
-                        </div>
-                        <h3 className="text-lg font-semibold text-foreground">{provider.label}</h3>
-                        <p className="text-xs text-muted-foreground">{provider.description}</p>
+                        {showKey ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                       </button>
-                    );
-                  })}
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm font-semibold text-foreground">
-                    <span>API Key</span>
-                    <span className="text-xs text-muted-foreground">Encrypted + per provider</span>
-                  </div>
-                  <div className="relative">
-                    <Input
-                      id="settings-api-key"
-                      type={showKey ? 'text' : 'password'}
-                      value={apiKey}
-                      onChange={(event) => setApiKey(event.target.value)}
-                      className="rounded-2xl border border-border/60 bg-background/60 px-4 py-3 text-sm pr-12"
-                      disabled={providerLoading}
-                    />
-                    <button
-                      type="button"
-                      onClick={toggleShowKey}
-                      aria-label={showKey ? 'Hide API key' : 'Show API key'}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary/70"
-                      disabled={providerLoading}
-                    >
-                      {showKey ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                    </button>
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div className="flex items-center justify-between gap-3">
                   <Button
-                    onClick={handleSave}
-                    className="flex-1 rounded-2xl border-none from-primary to-secondary/80 text-sm font-semibold"
-                    disabled={status === 'loading'}
+                    onClick={handleProviderSave}
+                    className="flex-shrink-0 rounded-2xl border-none px-6 from-primary to-secondary/80 text-sm font-semibold"
+                    disabled={providerStatus === 'loading'}
                   >
-                    {status === 'loading' ? 'Saving…' : 'Save'}
+                    {providerStatus === 'loading' ? 'Saving…' : 'Save provider key'}
                   </Button>
-                  <p className="text-xs text-muted-foreground">
-                    {statusMessage || 'Keys are encrypted and never shared.'}
+                  <p className="flex-1 truncate text-xs text-muted-foreground">
+                    {providerMessage || 'Keys are encrypted and never shared.'}
                   </p>
                 </div>
               </CardContent>

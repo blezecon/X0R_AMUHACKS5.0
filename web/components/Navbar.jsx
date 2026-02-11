@@ -22,11 +22,41 @@ export function Navbar() {
     const timer = setTimeout(() => {
       setMounted(true);
 
+        const fetchProfile = async (authToken) => {
+          try {
+            const response = await fetch('/api/auth/provider-settings', {
+              headers: { Authorization: `Bearer ${authToken}` }
+            });
+            const result = await response.json();
+            if (result.success) {
+              const profileName = result.data.name || localStorage.getItem('name') || 'You';
+              const profilePhoto = result.data.profilePhoto || '';
+              localStorage.setItem('name', profileName);
+              if (profilePhoto) {
+                localStorage.setItem('profilePhoto', profilePhoto);
+              } else {
+                localStorage.removeItem('profilePhoto');
+              }
+              setAuth((prev) => ({
+                ...prev,
+                isLoggedIn: true,
+                userName: profileName,
+                profilePhoto
+              }));
+            }
+          } catch (error) {
+            console.error('Failed to refresh profile', error);
+          }
+        };
+
         const checkAuth = () => {
           const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
           const name = typeof window !== 'undefined' ? localStorage.getItem('name') : 'You';
           const profilePhoto = typeof window !== 'undefined' ? localStorage.getItem('profilePhoto') : '';
           setAuth({ isLoggedIn: !!token, userName: name, profilePhoto: profilePhoto || '' });
+          if (token) {
+            void fetchProfile(token);
+          }
         };
 
       checkAuth();
