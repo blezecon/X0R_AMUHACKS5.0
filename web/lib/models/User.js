@@ -22,7 +22,16 @@ const UserSchema = new mongoose.Schema({
   },
   encryptedApiKeys: {
     type: Map,
-    of: String,
+    of: new mongoose.Schema({
+      encrypted: {
+        type: String,
+        required: true
+      },
+      iv: {
+        type: String,
+        required: true
+      }
+    }, { _id: false }),
     default: {}
   },
   preferences: {

@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Cpu, RefreshCw, MapPin, Sparkles } from 'lucide-react';
 
-export default function DecidePage() {
+export default function DashboardPage() {
   const router = useRouter();
   const [token, setToken] = useState(null);
   const [userName, setUserName] = useState('');

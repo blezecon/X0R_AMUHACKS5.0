@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Cpu, Menu, X, LogOut } from 'lucide-react';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const NAV_LINKS = [
   { label: 'Home', href: '/' },
@@ -14,7 +14,7 @@ const NAV_LINKS = [
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [auth, setAuth] = useState({ isLoggedIn: false, userName: '' });
+  const [auth, setAuth] = useState({ isLoggedIn: false, userName: '', profilePhoto: '' });
   const [mounted, setMounted] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -22,11 +22,12 @@ export function Navbar() {
     const timer = setTimeout(() => {
       setMounted(true);
 
-      const checkAuth = () => {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-        const name = typeof window !== 'undefined' ? localStorage.getItem('name') : 'You';
-        setAuth({ isLoggedIn: !!token, userName: name });
-      };
+        const checkAuth = () => {
+          const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+          const name = typeof window !== 'undefined' ? localStorage.getItem('name') : 'You';
+          const profilePhoto = typeof window !== 'undefined' ? localStorage.getItem('profilePhoto') : '';
+          setAuth({ isLoggedIn: !!token, userName: name, profilePhoto: profilePhoto || '' });
+        };
 
       checkAuth();
 
@@ -84,9 +85,13 @@ export function Navbar() {
     .toUpperCase();
 
   const menuItems = [
-    { label: 'Dashboard', href: '/decide' },
+    { label: 'Dashboard', href: '/dashboard' },
     { label: 'Settings', href: '/settings' },
   ];
+
+  const visibleNavLinks = auth.isLoggedIn
+    ? NAV_LINKS.filter((link) => link.label !== 'Home')
+    : NAV_LINKS;
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -100,7 +105,7 @@ export function Navbar() {
           </Link>
 
           <div className="hidden md:flex items-center gap-6">
-            {NAV_LINKS.map((link) => (
+            {visibleNavLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -119,7 +124,11 @@ export function Navbar() {
                   aria-expanded={isDropdownOpen}
                 >
                   <Avatar>
-                    <AvatarFallback>{initials}</AvatarFallback>
+                    {auth.profilePhoto ? (
+                      <AvatarImage src={auth.profilePhoto} alt={auth.userName || 'User avatar'} />
+                    ) : (
+                      <AvatarFallback>{initials}</AvatarFallback>
+                    )}
                   </Avatar>
                 </button>
 
@@ -186,7 +195,7 @@ export function Navbar() {
               {auth.isLoggedIn ? (
                 <>
                   <Link
-                    href="/decide"
+                    href="/dashboard"
                     className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
                     onClick={() => setIsMenuOpen(false)}
                   >

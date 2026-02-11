@@ -1,41 +1,201 @@
-import Link from 'next/link';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Shield, Sparkles, CheckCircle2, Settings } from 'lucide-react';
+'use client';
 
-const sections = [
-  {
-    title: 'Preferences',
-    description: 'Fine-tune meal, task, and productivity settings so recommendations stay aligned with your life.',
-    icon: Shield,
-    actions: [
-      { label: 'Manage Meals', href: '/decide?focus=meal' },
-      { label: 'Tweak Tasks', href: '/decide?focus=task' }
-    ]
+import Link from 'next/link';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
+import { Eye, EyeOff, Settings as SettingsIcon, Camera, Trash2 } from 'lucide-react';
+
+const PROVIDERS = {
+  openrouter: {
+    label: 'OpenRouter',
+    description: 'Balanced throughput and cost with multi-model access.'
   },
-  {
-    title: 'AI Providers',
-    description: 'Add or update API keys so the AI engines you trust have access to your data.',
-    icon: Sparkles,
-    actions: [
-      { label: 'Connect OpenRouter', href: '/settings/providers?provider=openrouter' },
-      { label: 'Connect Anthropic', href: '/settings/providers?provider=anthropic' }
-    ]
+  groq: {
+    label: 'Groq',
+    description: 'Low-latency inference optimized for fast decisions.'
   },
-  {
-    title: 'Security',
-    description: 'Update your password, toggle OTP, and review login activity.',
-    icon: CheckCircle2,
-    actions: [
-      { label: 'Change Password', href: '/settings/security' },
-      { label: 'Manage OTP', href: '/settings/security#otp' }
-    ]
+  anthropic: {
+    label: 'Anthropic Claude',
+    description: 'Safety-first assistant with conversational tone control.'
   }
-];
+};
 
 export default function SettingsPage() {
-  const initials = 'DR';
+  const router = useRouter();
+  const [token, setToken] = useState('');
+  const [preferredProvider, setPreferredProvider] = useState('openrouter');
+  const [activeProvider, setActiveProvider] = useState('openrouter');
+  const [providerLoading, setProviderLoading] = useState(false);
+  const [apiKey, setApiKey] = useState('');
+  const [showKey, setShowKey] = useState(false);
+  const [hasSavedKey, setHasSavedKey] = useState(false);
+  const [status, setStatus] = useState('idle');
+  const [statusMessage, setStatusMessage] = useState('');
+  const [name, setName] = useState('');
+  const [profilePhotoData, setProfilePhotoData] = useState('');
+  const [profilePhotoPreview, setProfilePhotoPreview] = useState('');
+  const [photoError, setPhotoError] = useState('');
+
+  useEffect(() => {
+    const storedToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    if (!storedToken) {
+      router.replace('/signin');
+      return;
+    }
+    setToken(storedToken);
+    fetchProvider(storedToken, undefined, false, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router]);
+
+  const handleProviderSelect = (providerKey) => {
+    setPreferredProvider(providerKey);
+    if (token) {
+      fetchProvider(token, providerKey);
+    }
+  };
+
+  const fetchProvider = async (authToken, provider, reveal = false, initial = false) => {
+    setProviderLoading(true);
+    try {
+      const query = new URLSearchParams();
+      if (provider) query.set('provider', provider);
+      if (reveal) query.set('reveal', 'true');
+      const response = await fetch(`/api/auth/provider-settings?${query.toString()}`, {
+        headers: {
+          Authorization: `Bearer ${authToken}`
+        }
+      });
+      const result = await response.json();
+      if (!result.success) throw new Error(result.error || 'Could not load provider');
+      if (initial && result.data.preferredProvider) {
+        setPreferredProvider(result.data.preferredProvider);
+      }
+      if (result.data.requestedProvider) {
+        setActiveProvider(result.data.requestedProvider);
+      }
+      setName(result.data.name || '');
+      const photoData = result.data.profilePhoto || '';
+      setProfilePhotoPreview(photoData);
+      setProfilePhotoData(photoData);
+      setHasSavedKey(result.data.hasApiKey);
+      if (reveal && result.data.apiKey) {
+        setApiKey(result.data.apiKey);
+      } else {
+        if (!initial) {
+          setApiKey('');
+        }
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setProviderLoading(false);
+    }
+  };
+
+  const handlePhotoChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      setProfilePhotoPreview('');
+      setProfilePhotoData('');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setPhotoError('Profile photo must be 5 MB or smaller');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const value = reader.result?.toString() ?? '';
+      setProfilePhotoPreview(value);
+      setProfilePhotoData(value);
+      setPhotoError('');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handlePhotoRemove = () => {
+    setProfilePhotoPreview('');
+    setProfilePhotoData('');
+    setPhotoError('');
+  };
+
+  const handleSave = async () => {
+    if (!token) return;
+    setStatus('loading');
+    setStatusMessage('');
+    const providerToSave = preferredProvider;
+    const trimmedKey = apiKey.trim();
+    const trimmedName = name.trim();
+    try {
+      const response = await fetch('/api/auth/provider-settings', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          provider: providerToSave,
+          apiKey: trimmedKey || undefined,
+          name: trimmedName || undefined,
+          profilePhoto: profilePhotoData || undefined
+        })
+      });
+
+      const result = await response.json();
+      if (!result.success) throw new Error(result.error || 'Could not save settings');
+      setStatus('success');
+      setStatusMessage(`Saved ${PROVIDERS[providerToSave].label}`);
+      setShowKey(false);
+      setApiKey('');
+      setProfilePhotoData(profilePhotoPreview);
+      await fetchProvider(token, providerToSave);
+      if (typeof window !== 'undefined') {
+        if (result.data.name) {
+          localStorage.setItem('name', result.data.name);
+        }
+        if (result.data.profilePhoto) {
+          localStorage.setItem('profilePhoto', result.data.profilePhoto);
+        } else {
+          localStorage.removeItem('profilePhoto');
+        }
+        window.dispatchEvent(new Event('auth-change'));
+      }
+      setTimeout(() => setStatus('idle'), 1500);
+    } catch (error) {
+      console.error(error);
+      setStatus('error');
+      setStatusMessage('Update failed');
+    }
+  };
+
+  const toggleShowKey = async () => {
+    if (!token) return;
+    const nextShowKey = !showKey;
+    if (nextShowKey && hasSavedKey && !apiKey) {
+      setProviderLoading(true);
+      try {
+        await fetchProvider(token, preferredProvider, true);
+      } finally {
+        setProviderLoading(false);
+      }
+    }
+    setShowKey(nextShowKey);
+  };
+
+  const initials = (name || 'You')
+    .split(' ')
+    .map((word) => word[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
 
   return (
     <main className="flex-1 bg-background/80">
@@ -44,7 +204,11 @@ export default function SettingsPage() {
           <div className="mb-12 flex flex-col gap-4">
             <div className="flex items-center gap-4">
               <Avatar>
-                <AvatarFallback>{initials}</AvatarFallback>
+                {profilePhotoPreview ? (
+                  <AvatarImage src={profilePhotoPreview} alt={name || 'User avatar'} />
+                ) : (
+                  <AvatarFallback>{initials}</AvatarFallback>
+                )}
               </Avatar>
               <div>
                 <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Account</p>
@@ -52,43 +216,140 @@ export default function SettingsPage() {
                 <p className="text-sm text-muted-foreground">Keep your preferences in sync with your routine.</p>
               </div>
             </div>
-            <Link href="/decide" className="w-max">
-              <Button variant="outline" size="sm" className="gap-2">
-                <Settings className="h-4 w-4" />
-                Back to Dashboard
-              </Button>
-            </Link>
+            <Button variant="outline" size="sm" className="gap-2" onClick={() => router.push('/dashboard')}>
+              <SettingsIcon className="h-4 w-4" />
+              Back to Dashboard
+            </Button>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2">
-            {sections.map((section) => (
-              <Card key={section.title} className="bg-gradient-to-br from-background to-background/40 border border-border">
-                <CardContent>
-                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.4em] text-muted-foreground">
-                    <section.icon className="h-4 w-4" />
-                    {section.title}
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Card>
+              <CardContent>
+                <div className="grid gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="settings-name">Full name</Label>
+                    <Input
+                      id="settings-name"
+                      placeholder="Your name"
+                      value={name}
+                      onChange={(event) => setName(event.target.value)}
+                      className="rounded-2xl border border-border/60 bg-muted/30 px-4 py-3 text-sm"
+                    />
                   </div>
-                  <h2 className="mt-4 text-xl font-semibold leading-tight">{section.title}</h2>
-                  <p className="mt-2 text-muted-foreground">{section.description}</p>
-                  <div className="mt-6 flex flex-wrap gap-3">
-                    {section.actions.map((action) => (
-                      <Link
-                        key={action.label}
-                        href={action.href}
-                        className="flex items-center gap-1 text-sm font-medium text-primary transition-colors hover:text-primary/70"
+                  <div className="space-y-2">
+                    <Label className="flex items-center justify-between text-sm font-semibold text-foreground">
+                      <span>Profile photo</span>
+                      {photoError && <span className="text-xs text-destructive">{photoError}</span>}
+                    </Label>
+                    <div className="flex items-center gap-3">
+                      <label
+                        htmlFor="photo-upload"
+                        className="flex items-center gap-2 rounded-2xl border border-dashed border-border/70 bg-background/70 px-4 py-3 text-sm font-medium text-foreground transition hover:border-primary"
                       >
-                        <span className="text-xs uppercase tracking-[0.5em] text-primary/60">›</span>
-                        {action.label}
-                      </Link>
-                    ))}
+                        <Camera className="h-5 w-5" />
+                        <span>Upload photo</span>
+                      </label>
+                      {profilePhotoPreview && (
+                        <div className="relative h-16 w-16 overflow-hidden rounded-2xl border border-border/60">
+                          <img src={profilePhotoPreview} alt="Profile preview" className="h-full w-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={handlePhotoRemove}
+                            className="absolute right-1 top-1 rounded-full bg-card/80 p-1 text-muted-foreground"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    <input
+                      id="photo-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePhotoChange}
+                      className="sr-only"
+                    />
                   </div>
-                </CardContent>
-              </Card>
-            ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-card/80 border border-border/60">
+              <CardHeader className="space-y-2">
+                <CardTitle className="text-lg font-semibold">AI Providers</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Toggle between providers, securely store API keys, and keep everything encrypted on our servers.
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid gap-3 md:grid-cols-3">
+                  {Object.entries(PROVIDERS).map(([key, provider]) => {
+                    const isSelected = preferredProvider === key;
+                    const isActive = activeProvider === key;
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => handleProviderSelect(key)}
+                        className={`flex flex-col gap-1 rounded-2xl border p-4 text-left transition ${
+                          isSelected
+                            ? 'border-primary/80 bg-primary/10 shadow-lg shadow-primary/30'
+                            : 'border-border/40 bg-background/60 hover:border-primary/70'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between text-xs uppercase tracking-[0.4em] text-muted-foreground">
+                          <span>Provider</span>
+                        </div>
+                        <h3 className="text-lg font-semibold text-foreground">{provider.label}</h3>
+                        <p className="text-xs text-muted-foreground">{provider.description}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm font-semibold text-foreground">
+                    <span>API Key</span>
+                    <span className="text-xs text-muted-foreground">Encrypted + per provider</span>
+                  </div>
+                  <div className="relative">
+                    <Input
+                      id="settings-api-key"
+                      type={showKey ? 'text' : 'password'}
+                      value={apiKey}
+                      onChange={(event) => setApiKey(event.target.value)}
+                      className="rounded-2xl border border-border/60 bg-background/60 px-4 py-3 text-sm pr-12"
+                      disabled={providerLoading}
+                    />
+                    <button
+                      type="button"
+                      onClick={toggleShowKey}
+                      aria-label={showKey ? 'Hide API key' : 'Show API key'}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary/70"
+                      disabled={providerLoading}
+                    >
+                      {showKey ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <Button
+                    onClick={handleSave}
+                    className="flex-1 rounded-2xl border-none from-primary to-secondary/80 text-sm font-semibold"
+                    disabled={status === 'loading'}
+                  >
+                    {status === 'loading' ? 'Saving…' : 'Save'}
+                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    {statusMessage || 'Keys are encrypted and never shared.'}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
-        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-primary/10 to-transparent" />
-      </section>
+        </section>
     </main>
   );
 }

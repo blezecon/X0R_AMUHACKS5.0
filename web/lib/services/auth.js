@@ -216,7 +216,7 @@ export async function loginUser(email, password) {
   };
 }
 
-export async function completeOnboarding(userId, { provider, apiKey, profilePhoto, skip }) {
+export async function completeOnboarding(userId, { provider, apiKey, profilePhoto, skip, name }) {
   await connectDB();
 
   const user = await User.findById(userId);
@@ -225,16 +225,29 @@ export async function completeOnboarding(userId, { provider, apiKey, profilePhot
     throw new Error('User not found');
   }
 
+  const providerToUse = provider || user.preferredProvider || 'openrouter';
   if (provider) {
     user.preferredProvider = provider;
   }
 
-  if (apiKey && provider) {
-    user.encryptedApiKeys.set(provider, encrypt(apiKey));
+  const existingKey = user.encryptedApiKeys?.get(providerToUse);
+  const encryptedKeys = new Map();
+
+  if (apiKey) {
+    encryptedKeys.set(providerToUse, encrypt(apiKey));
+  } else if (existingKey) {
+    encryptedKeys.set(providerToUse, existingKey);
   }
+
+  user.encryptedApiKeys = encryptedKeys;
+  user.markModified('encryptedApiKeys');
 
   if (profilePhoto) {
     user.profilePhoto = profilePhoto;
+  }
+
+  if (name) {
+    user.name = name;
   }
 
   user.onboarded = true;
@@ -246,7 +259,8 @@ export async function completeOnboarding(userId, { provider, apiKey, profilePhot
     userId: user._id.toString(),
     profilePhoto: user.profilePhoto,
     preferredProvider: user.preferredProvider,
-    onboarded: user.onboarded
+    onboarded: user.onboarded,
+    name: user.name
   };
 }
 

@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +12,12 @@ import { LogIn, Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 
 export default function SignInPage() {
   const router = useRouter();
+  useEffect(() => {
+    const storedToken = window?.localStorage?.getItem('token');
+    if (storedToken) {
+      router.replace('/dashboard');
+    }
+  }, [router]);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -47,9 +53,14 @@ export default function SignInPage() {
       localStorage.setItem('userId', result.data.userId);
       localStorage.setItem('email', result.data.email);
       localStorage.setItem('name', result.data.name);
+      if (result.data.profilePhoto) {
+        localStorage.setItem('profilePhoto', result.data.profilePhoto);
+      } else {
+        localStorage.removeItem('profilePhoto');
+      }
 
       // Redirect to dashboard
-      router.push('/decide');
+      router.push('/dashboard');
     } catch (err) {
       setError(err.message);
     } finally {

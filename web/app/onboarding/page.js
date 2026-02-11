@@ -99,7 +99,7 @@ export default function OnboardingPage() {
 
       window.dispatchEvent(new Event('auth-change'));
       setStatus('success');
-      setTimeout(() => router.push('/decide'), 1200);
+      setTimeout(() => router.push('/dashboard'), 1200);
     } catch (err) {
       setError(err.message);
       setStatus('error');
@@ -138,11 +138,11 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary/10 via-background to-muted/30 px-4 py-12 text-foreground">
-      <div className="container mx-auto space-y-8">
+    <div className="min-h-screen bg-gradient-to-b from-primary/20 via-background to-muted/30 px-4 py-12 text-foreground">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-2 sm:px-4">
         {headings}
 
-        <Card className="overflow-hidden rounded-3xl border border-border/60 bg-card/80 shadow-xl shadow-primary/20">
+        <Card className="w-full max-w-3xl self-center overflow-hidden rounded-[32px] border border-border/60 bg-card/90 shadow-[0_20px_80px_rgba(29,78,216,0.35)]">
           <CardContent className="space-y-6 p-6 md:p-8">
             <div className="grid gap-4 md:grid-cols-3">
               {PROVIDERS.map((option) => {
@@ -235,10 +235,11 @@ export default function OnboardingPage() {
               <Button
                 onClick={() => handleSubmit()}
                 disabled={status === 'loading'}
-                className="flex-1 justify-center gap-2 rounded-2xl border-none bg-gradient-to-r from-primary to-primary/70 text-sm font-semibold"
+                className="flex w-full items-center justify-center gap-2 rounded-2xl border-none from-primary to-secondary/80 text-sm font-semibold text-white md:w-auto"
               >
-                {status === 'loading' && <ArrowRight className="h-4 w-4 animate-spin" />}
                 {bodyStatus[status]}
+                {!status.startsWith('loading') && <ArrowRight className="h-4 w-4" />}
+                {status === 'loading' && <ArrowRight className="h-4 w-4 animate-spin" />}
               </Button>
               <button
                 type="button"

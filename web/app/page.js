@@ -1,13 +1,17 @@
+"use client";
+
 import Link from 'next/link';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { 
-  Cpu, 
-  Zap, 
-  Shield, 
-  Star, 
-  Clock, 
-  LineChart, 
+import {
+  Cpu,
+  Zap,
+  Shield,
+  Star,
+  Clock,
+  LineChart,
   ArrowRight,
   CheckCircle2,
   Utensils,
@@ -17,6 +21,15 @@ import {
 } from 'lucide-react';
 
 export default function LandingPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const token = localStorage.getItem('token');
+    if (token) {
+      router.replace('/dashboard');
+    }
+  }, [router]);
   const features = [
     {
       icon: Cpu,

@@ -87,6 +87,11 @@ export default function VerifyOTPPage() {
       localStorage.setItem('userId', result.data.userId);
       localStorage.setItem('email', result.data.email);
       localStorage.setItem('name', result.data.name);
+      if (result.data.profilePhoto) {
+        localStorage.setItem('profilePhoto', result.data.profilePhoto);
+      } else {
+        localStorage.removeItem('profilePhoto');
+      }
       localStorage.setItem('onboarded', result.data.onboarded ? 'true' : 'false');
 
       // Clear pending verification
@@ -94,7 +99,7 @@ export default function VerifyOTPPage() {
 
       setSuccess(true);
 
-      const destination = result.data.onboarded ? '/decide' : '/onboarding';
+      const destination = result.data.onboarded ? '/dashboard' : '/onboarding';
       // Redirect to next step after a short delay
       setTimeout(() => {
         router.push(destination);
