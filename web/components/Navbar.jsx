@@ -80,6 +80,7 @@ export function Navbar() {
 
   const handleLogout = () => {
     localStorage.clear();
+    document.cookie = 'token=; path=/; max-age=0';
     window.dispatchEvent(new Event('auth-change'));
     window.location.href = '/';
   };

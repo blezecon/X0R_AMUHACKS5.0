@@ -16,7 +16,7 @@ import {
   CheckCircle2,
   Utensils,
   CheckSquare,
-  Thermometer,
+  Shirt,
   Sparkles
 } from 'lucide-react';
 
@@ -39,7 +39,7 @@ export default function LandingPage() {
     {
       icon: Zap,
       title: 'Save Mental Energy',
-      description: 'Stop wasting Cpupower on small daily decisions. Focus on what truly matters.'
+      description: 'Stop wasting brainpower on small daily decisions. Focus on what truly matters.'
     },
     {
       icon: Shield,
@@ -226,11 +226,11 @@ export default function LandingPage() {
               What Can We Help You Decide?
             </h2>
             <p className="text-lg text-muted-foreground">
-              From meals to daily tasks, we&apos;ve got you covered
+              From meals to tasks to outfits, we&apos;ve got you covered
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             <Card className="hover:shadow-lg transition-shadow">
               <CardContent className="pt-6">
                 <div className="w-12 h-12 rounded-lg bg-orange-100 flex items-center justify-center mb-4">
@@ -238,10 +238,10 @@ export default function LandingPage() {
                 </div>
                 <h3 className="text-xl font-semibold mb-2">Meal Decisions</h3>
                 <p className="text-muted-foreground mb-4">
-                  Never wonder what to eat again. Get personalized meal suggestions based on weather, time, and your preferences.
+                  Never wonder what to eat again. Get personalized meal suggestions.
                 </p>
                 <ul className="space-y-2">
-                  {['Breakfast, lunch, and dinner', 'Weather-aware suggestions', 'Dietary preferences'].map((item, i) => (
+                  {['Weather-aware suggestions', 'Dietary preferences', 'Budget-conscious picks'].map((item, i) => (
                     <li key={i} className="flex items-center gap-2 text-sm">
                       <CheckCircle2 className="h-4 w-4 text-green-500" />
                       {item}
@@ -258,10 +258,30 @@ export default function LandingPage() {
                 </div>
                 <h3 className="text-xl font-semibold mb-2">Daily Tasks</h3>
                 <p className="text-muted-foreground mb-4">
-                  Boost your productivity with AI-suggested tasks that match your goals and energy levels.
+                  Boost productivity with AI-suggested tasks that match your energy.
                 </p>
                 <ul className="space-y-2">
-                  {['Work and personal tasks', 'Time-appropriate suggestions', 'Productivity optimization'].map((item, i) => (
+                  {['Time-appropriate tasks', 'Energy-level aware', 'Productivity optimized'].map((item, i) => (
+                    <li key={i} className="flex items-center gap-2 text-sm">
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardContent className="pt-6">
+                <div className="w-12 h-12 rounded-lg bg-violet-100 flex items-center justify-center mb-4">
+                  <Shirt className="h-6 w-6 text-violet-600" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Outfit Choices</h3>
+                <p className="text-muted-foreground mb-4">
+                  Stop staring at your wardrobe. Get outfit ideas instantly.
+                </p>
+                <ul className="space-y-2">
+                  {['Weather-matched outfits', 'Dress code aware', 'Style preferences'].map((item, i) => (
                     <li key={i} className="flex items-center gap-2 text-sm">
                       <CheckCircle2 className="h-4 w-4 text-green-500" />
                       {item}

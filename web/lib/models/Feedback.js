@@ -3,8 +3,7 @@ import mongoose from 'mongoose';
 const FeedbackSchema = new mongoose.Schema({
   decisionId: {
     type: String,
-    required: true,
-    index: true
+    required: true
   },
   chosenOption: {
     type: String,
@@ -24,7 +23,7 @@ const FeedbackSchema = new mongoose.Schema({
   type: {
     type: String,
     required: true,
-    enum: ['meal', 'task']
+    enum: ['meal', 'task', 'clothing']
   },
   createdAt: {
     type: Date,

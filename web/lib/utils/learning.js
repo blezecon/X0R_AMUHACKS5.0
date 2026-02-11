@@ -1,12 +1,17 @@
 // Calculate confidence score based on user preferences
 export function calculateConfidence(preferences, option, type) {
-  if (!preferences || !preferences[type]) {
+  if (!preferences || !preferences[type] || !option) {
     return 0.5; // Default medium confidence
   }
-  
+
   const typePrefs = preferences[type];
-  const score = typePrefs[option] || 0;
-  
+  // Convert Mongoose Map to plain object if needed
+  const plainPrefs = typePrefs instanceof Map
+    ? Object.fromEntries(typePrefs)
+    : typePrefs;
+  const rawScore = plainPrefs[option];
+  const score = Number.isFinite(rawScore) ? rawScore : 0;
+
   // Normalize: assume max score of 10 for 100% confidence
   return Math.min(score / 10, 1);
 }
@@ -31,8 +36,15 @@ export function getTopOptions(preferences, type, count = 3) {
   if (!preferences[type]) {
     return [];
   }
-  
-  return Object.entries(preferences[type])
+
+  // Convert Mongoose Map to plain object to avoid internal properties
+  const typePrefs = preferences[type];
+  const plainPrefs = typePrefs instanceof Map
+    ? Object.fromEntries(typePrefs)
+    : typePrefs;
+
+  return Object.entries(plainPrefs)
+    .filter(([key]) => !key.startsWith('$')) // Filter out Mongoose internal properties
     .sort((a, b) => b[1] - a[1])
     .slice(0, count)
     .map(([option]) => option);

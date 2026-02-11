@@ -44,6 +44,11 @@ const UserSchema = new mongoose.Schema({
       type: Map,
       of: Number,
       default: {}
+    },
+    clothing: {
+      type: Map,
+      of: Number,
+      default: {}
     }
   },
   profile: {

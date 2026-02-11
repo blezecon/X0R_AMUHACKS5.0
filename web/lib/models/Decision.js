@@ -9,7 +9,7 @@ const DecisionSchema = new mongoose.Schema({
   type: {
     type: String,
     required: true,
-    enum: ['meal', 'task']
+    enum: ['meal', 'task', 'clothing']
   },
   question: {
     type: String,

@@ -83,7 +83,8 @@ export async function registerUser(name, email, password, apiKeys = {}, preferre
     encryptedApiKeys: Object.fromEntries(encryptedKeys),
     preferences: {
       meal: {},
-      task: {}
+      task: {},
+      clothing: {}
     },
     isEmailVerified: false,
     otpCode,
@@ -230,17 +231,19 @@ export async function completeOnboarding(userId, { provider, apiKey, profilePhot
     user.preferredProvider = provider;
   }
 
-  const existingKey = user.encryptedApiKeys?.get(providerToUse);
-  const encryptedKeys = new Map();
-
-  if (apiKey) {
-    encryptedKeys.set(providerToUse, encrypt(apiKey));
-  } else if (existingKey) {
-    encryptedKeys.set(providerToUse, existingKey);
+  // Initialize encryptedApiKeys as Map if not present or if it's a plain object
+  if (!user.encryptedApiKeys) {
+    user.encryptedApiKeys = new Map();
+  } else if (!(user.encryptedApiKeys instanceof Map)) {
+    // Convert plain object to Map (Mongoose may return plain object in some cases)
+    user.encryptedApiKeys = new Map(Object.entries(user.encryptedApiKeys));
   }
 
-  user.encryptedApiKeys = encryptedKeys;
-  user.markModified('encryptedApiKeys');
+  // Only update the key for the specific provider being saved
+  if (apiKey) {
+    user.encryptedApiKeys.set(providerToUse, encrypt(apiKey));
+    user.markModified('encryptedApiKeys');
+  }
 
   if (profilePhoto) {
     user.profilePhoto = profilePhoto;

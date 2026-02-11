@@ -1,17 +1,15 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { verifyToken } from '@/lib/services/auth.js';
+import { verifyToken, getUserById } from '@/lib/services/auth.js';
 import { getRecommendation } from '@/lib/services/decision-engine.js';
 import { getWeather, getWeatherContext } from '@/lib/services/weather.js';
 
 const recommendSchema = z.object({
-  type: z.enum(['meal', 'task']),
-  location: z.string().optional()
+  type: z.enum(['meal', 'task', 'clothing']),
 });
 
 export async function GET(request) {
   try {
-    // Verify authentication
     const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json(
@@ -23,48 +21,41 @@ export async function GET(request) {
     const token = authHeader.substring(7);
     const { userId } = verifyToken(token);
     
-    // Parse query parameters
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type');
-    const location = searchParams.get('location');
+    const params = recommendSchema.parse({ type });
     
-    const params = recommendSchema.parse({ type, location });
-    
-    // Get weather if location provided
+    // Get weather from user's stored location
     let weather = null;
     let weatherContext = 'neutral';
-    if (params.location) {
-      weather = await getWeather(params.location);
+    const user = await getUserById(userId);
+    const userLocation = user?.profile?.location || null;
+    if (userLocation) {
+      weather = await getWeather(userLocation);
       weatherContext = getWeatherContext(weather);
     }
     
-    // Get current time
     const now = new Date();
     const time = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
     
-    // Build context
     const context = {
       weather: weatherContext,
       time,
-      location: params.location
+      location: userLocation
     };
     
-    // Get recommendation
     const recommendation = await getRecommendation(userId, params.type, context);
     
     return NextResponse.json({
       success: true,
       data: {
         ...recommendation,
-        context: weather ? {
-          weather,
-          context: weatherContext
-        } : null
+        context: weather ? { weather, context: weatherContext } : null
       }
     });
   } catch (error) {
     console.error('Recommendation error:', error);
-    
+
     if (error.message === 'Invalid or expired token') {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
@@ -72,6 +63,20 @@ export async function GET(request) {
       );
     }
     
+    if (error?.name === 'MissingApiKeyError') {
+      return NextResponse.json(
+        { success: false, error: error.message, code: 'MISSING_API_KEY' },
+        { status: 400 }
+      );
+    }
+
+    if (error?.name === 'AIProviderError') {
+      return NextResponse.json(
+        { success: false, error: error.message, code: 'AI_PROVIDER_ERROR', provider: error.provider },
+        { status: error.statusCode || 502 }
+      );
+    }
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { success: false, error: 'Invalid input', details: error.errors },
@@ -80,7 +85,7 @@ export async function GET(request) {
     }
     
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: error.message || 'Something went wrong' },
       { status: 500 }
     );
   }

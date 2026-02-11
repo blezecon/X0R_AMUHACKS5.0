@@ -84,6 +84,7 @@ export default function VerifyOTPPage() {
 
       // Store auth data (auto-login)
       localStorage.setItem('token', result.data.token);
+      document.cookie = `token=${result.data.token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
       localStorage.setItem('userId', result.data.userId);
       localStorage.setItem('email', result.data.email);
       localStorage.setItem('name', result.data.name);

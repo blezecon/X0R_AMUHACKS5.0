@@ -14,45 +14,60 @@ import {
 } from '../utils/learning.js';
 
 export async function getRecommendation(userId, type, context, question) {
-  // Ensure DB connection
   await connectDB();
 
-  // Get user preferences
   const user = await User.findById(userId);
-
   if (!user) {
     throw new Error('User not found');
   }
 
-  const preferences = user.preferences || { meal: {}, task: {} };
+  const preferences = user.preferences || { meal: {}, task: {}, clothing: {} };
+  if (!preferences.clothing) preferences.clothing = {};
+  if (!preferences.meal) preferences.meal = {};
+  if (!preferences.task) preferences.task = {};
 
-  // Get AI suggestion
-  let aiSuggestionData = null;
-  try {
-    aiSuggestionData = await getAISuggestion(userId, type, context, preferences, user.preferredProvider);
-  } catch (error) {
-    console.error('AI suggestion failed:', error);
-  }
+  // Build user data for AI context from onboarding
+  const userData = {
+    profile: user.profile || null,
+    health: user.health || null,
+    work: user.work || null,
+    foodPreferences: user.foodPreferences || null,
+    clothingPreferences: user.clothingPreferences || null,
+    taskStyle: user.taskStyle || null,
+    decisionStyle: user.decisionStyle || null,
+  };
 
-  // Get fallback options
+  // Get AI suggestion - let errors propagate for proper user feedback
+  const aiSuggestionData = await getAISuggestion(
+    userId,
+    type,
+    context,
+    preferences[type] || {},
+    user.preferredProvider,
+    userData
+  );
+
+  // Get fallback options for blending
   const fallbackOptions = getFallbackOptions(type);
-
-  // Get user's top preferred options
   const userTopOptions = getTopOptions(preferences, type, 2);
 
-  // Blend options
-  const options = blendOptions(aiSuggestion, fallbackOptions, userTopOptions);
+  // Blend options: AI suggestion first, then user prefs, then fallbacks
+  const options = blendOptions(aiSuggestionData?.suggestion, fallbackOptions, userTopOptions);
 
   // Calculate confidence
   const primaryOption = options[0];
+  const baseConfidence = calculateConfidence(preferences, primaryOption, type);
   const confidence = aiSuggestionData?.suggestion
-    ? Math.max(0.7, calculateConfidence(preferences, primaryOption, type))
-    : calculateConfidence(preferences, primaryOption, type);
+    ? Math.max(0.7, baseConfidence)
+    : baseConfidence;
 
-  const decisionQuestion = question?.trim() || (type === 'meal' ? 'What should I eat today?' : 'What should I do today?');
+  const decisionQuestion = question?.trim() || (
+    type === 'meal' ? 'What should I eat today?' :
+    type === 'clothing' ? 'What should I wear today?' :
+    'What should I do today?'
+  );
   const provider = aiSuggestionData?.provider || 'fallback';
 
-  // Create decision document
   const decision = new Decision({
     userId,
     type,
@@ -78,25 +93,17 @@ export async function getRecommendation(userId, type, context, question) {
 }
 
 export async function recordFeedback(userId, decisionId, chosenOption, rating) {
-  // Ensure DB connection
   await connectDB();
 
-  // Get the decision
-  const decision = await Decision.findOne({
-    _id: decisionId,
-    userId
-  });
-
+  const decision = await Decision.findOne({ _id: decisionId, userId });
   if (!decision) {
     throw new Error('Decision not found');
   }
 
-  // Validate chosen option
   if (!decision.options.includes(chosenOption)) {
     throw new Error('Invalid option selected');
   }
 
-  // Record feedback
   const feedback = new Feedback({
     decisionId,
     chosenOption,
@@ -107,17 +114,19 @@ export async function recordFeedback(userId, decisionId, chosenOption, rating) {
 
   await feedback.save();
 
-  // Update user preferences
   const user = await User.findById(userId);
+  const currentPrefs = user.preferences || { meal: {}, task: {}, clothing: {} };
+  if (!currentPrefs.clothing) currentPrefs.clothing = {};
 
   const updatedPreferences = updatePreferences(
-    user.preferences || { meal: {}, task: {} },
+    currentPrefs,
     decision.type,
     chosenOption,
     rating
   );
 
   user.preferences = updatedPreferences;
+  user.markModified('preferences');
   await user.save();
 
   return {
@@ -127,32 +136,32 @@ export async function recordFeedback(userId, decisionId, chosenOption, rating) {
 }
 
 export async function getUserStats(userId) {
-  // Ensure DB connection
   await connectDB();
 
   const totalDecisions = await Decision.countDocuments({ userId });
   const totalFeedback = await Feedback.countDocuments({ userId });
 
-  // Calculate average rating
   const avgRatingResult = await Feedback.aggregate([
     { $match: { userId } },
     { $group: { _id: null, avg: { $avg: '$rating' } } }
   ]);
 
   const user = await User.findById(userId);
+  const prefs = user?.preferences || {};
 
   return {
     totalDecisions,
     totalFeedback,
     averageRating: avgRatingResult[0]?.avg || 0,
     topPreferences: {
-      meal: getTopOptions(user?.preferences || {}, 'meal', 3),
-      task: getTopOptions(user?.preferences || {}, 'task', 3)
+      meal: getTopOptions(prefs, 'meal', 3),
+      task: getTopOptions(prefs, 'task', 3),
+      clothing: getTopOptions(prefs, 'clothing', 3)
     }
   };
 }
 
-export async function getUserHistory(userId, limit = 6) {
+export async function getUserHistory(userId, limit = 10) {
   await connectDB();
   const history = await Decision.find({ userId })
     .sort({ createdAt: -1 })
