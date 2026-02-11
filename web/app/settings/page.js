@@ -10,6 +10,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Eye, EyeOff, Settings as SettingsIcon, Camera, Trash2 } from 'lucide-react';
+import Image from 'next/image';
 
 const PROVIDERS = {
   openrouter: {
@@ -286,7 +287,13 @@ export default function SettingsPage() {
                       </label>
                       {profilePhotoPreview && (
                         <div className="relative h-16 w-16 overflow-hidden rounded-2xl border border-border/60">
-                          <img src={profilePhotoPreview} alt="Profile preview" className="h-full w-full object-cover" />
+                          <Image
+                            src={profilePhotoPreview}
+                            alt="Profile preview"
+                            fill
+                            className="object-cover"
+                            unoptimized
+                          />
                           <button
                             type="button"
                             onClick={handlePhotoRemove}

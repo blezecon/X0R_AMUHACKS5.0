@@ -23,7 +23,7 @@ export default function PrivacyPage() {
           </CardHeader>
           <CardContent className="space-y-4 text-muted-foreground">
             <p>
-              At Decision Fatigue Reducer, we take your privacy seriously. This policy explains how we handle your data.
+              At Swiftion, we take your privacy seriously. This policy explains how we handle your data.
             </p>
             
             <h3 className="text-lg font-semibold text-foreground">1. Information We Collect</h3>

@@ -31,10 +31,10 @@ async function sendOTPEmail(email, otp, name) {
   const mailOptions = {
     from: process.env.GMAIL_USER,
     to: email,
-    subject: 'Verify Your Email - Decision Fatigue Reducer',
+    subject: 'Verify Your Email - Swiftion',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #333;">Welcome to Decision Fatigue Reducer!</h2>
+        <h2 style="color: #333;">Welcome to Swiftion!</h2>
         <p>Hi ${name},</p>
         <p>Thank you for signing up. Please use the following OTP to verify your email address:</p>
         <div style="background-color: #f4f4f4; padding: 20px; text-align: center; margin: 20px 0; border-radius: 8px;">
@@ -42,7 +42,7 @@ async function sendOTPEmail(email, otp, name) {
         </div>
         <p>This OTP will expire in 10 minutes.</p>
         <p>If you didn't request this, please ignore this email.</p>
-        <p>Best regards,<br>Decision Fatigue Reducer Team</p>
+        <p>Best regards,<br>Swiftion Team</p>
       </div>
     `
   };

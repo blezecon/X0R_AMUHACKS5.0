@@ -23,7 +23,7 @@ export default function TermsPage() {
           </CardHeader>
           <CardContent className="space-y-4 text-muted-foreground">
             <p>
-              Welcome to Decision Fatigue Reducer. By using our service, you agree to these terms.
+              Welcome to Swiftion. By using our service, you agree to these terms.
             </p>
             
             <h3 className="text-lg font-semibold text-foreground">1. Acceptance of Terms</h3>

@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Decision Fatigue Reducer - AI-Powered Daily Decisions",
+  title: "Swiftion - AI-Powered Daily Decisions",
   description: "Let AI handle your daily decisions. Reduce decision fatigue and save mental energy for what truly matters.",
 };
 

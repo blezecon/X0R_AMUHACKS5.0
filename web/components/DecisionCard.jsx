@@ -64,7 +64,7 @@ export function DecisionCard({ type, options, aiSuggestion, confidence, context,
           >
             <span className="flex items-center gap-2">
               {index === 0 && aiSuggestion && (
-                <Sparkles className="w-4 h-4 text-yellow-500 flex-shrink-0" />
+                <Sparkles className="w-4 h-4 text-yellow-500 shrink-0" />
               )}
               <span className="font-medium">{option}</span>
             </span>

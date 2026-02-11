@@ -18,7 +18,8 @@ import {
   Utensils,
   CheckSquare,
   Shirt,
-  Sparkles
+  Sparkles,
+  Bot
 } from 'lucide-react';
 
 export default function LandingPage() {
@@ -68,7 +69,7 @@ export default function LandingPage() {
     {
       step: '01',
       title: 'Sign Up',
-      description: 'Create your account and optionally add your AI API keys for enhanced recommendations'
+      description: 'Create your account and add your AI API keys (stores in hash so nobody knows your api key) for enhanced recommendations'
     },
     {
       step: '02',
@@ -115,7 +116,7 @@ export default function LandingPage() {
               hueShift={0}
               noiseIntensity={0}
               scanlineIntensity={0}
-              speed={1}
+              speed={0.5}
               scanlineFrequency={0}
               warpAmount={0}
             />
@@ -123,8 +124,8 @@ export default function LandingPage() {
         </div>
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-8">
-              <Star className="h-4 w-4" />
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-foreground text-sm font-medium mb-8">
+              <Bot className="h-5 w-5" />
               AI-Powered Daily Decisions
             </div>
             
@@ -222,7 +223,7 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {howItWorks.map((step, index) => (
               <div key={index} className="relative">
-                <div className="text-6xl font-bold text-primary/10 mb-4">{step.step}</div>
+                <div className="text-6xl font-bold text-primary/60 mb-4">{step.step}</div>
                 <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
                 <p className="text-muted-foreground">{step.description}</p>
               </div>

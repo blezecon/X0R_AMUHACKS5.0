@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Cpu, Menu, X, LogOut } from 'lucide-react';
+import { Hourglass, Menu, X, LogOut } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export function Navbar() {
@@ -89,8 +89,8 @@ export function Navbar() {
         <div className="container mx-auto px-4">
           <div className="flex h-16 items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <Cpu className="h-6 w-6 text-primary" />
-              <span className="text-xl font-bold">Decision Fatigue Reducer</span>
+              <Hourglass className="h-6 w-6 text-primary" />
+              <span className="text-xl font-bold">SWIFTION</span>
             </Link>
             <div className="hidden md:flex items-center gap-3">
               <div className="h-9 w-20 bg-muted rounded animate-pulse" />
@@ -119,9 +119,9 @@ export function Navbar() {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <Cpu className="h-6 w-6 text-primary" />
+            <Hourglass className="h-6 w-6 text-primary" />
             <span className="text-xl font-bold bg-linear-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-              Decision Fatigue Reducer
+              SWIFTION
             </span>
           </Link>
 

@@ -283,7 +283,7 @@ async function getOpenRouterSuggestion(apiKey, prompt) {
           'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
           'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-          'X-Title': 'Decision Fatigue Reducer'
+          'X-Title': 'Swiftion'
         },
         timeout: 15000
       }

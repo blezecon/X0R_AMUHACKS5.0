@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Cpu, Github, Heart } from "lucide-react";
+import { Hourglass, Github, Heart } from "lucide-react";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -11,8 +11,8 @@ export function Footer() {
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2">
-            <Cpu className="h-5 w-5 text-primary" />
-            <span className="text-sm font-bold">Decision Fatigue Reducer</span>
+            <Hourglass className="h-5 w-5 text-primary" />
+            <span className="text-sm font-bold">SWIFTION</span>
           </Link>
 
           <p className="text-xs text-muted-foreground">

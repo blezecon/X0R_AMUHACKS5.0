@@ -11,6 +11,7 @@ import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowRight, ShieldCheck, Sparkles, Camera } from 'lucide-react';
+import Image from 'next/image';
 
 const PROVIDERS = [
   {
@@ -549,10 +550,12 @@ export default function OnboardingPage() {
             </label>
             {providerSection.profilePhoto && (
               <div className="relative h-16 w-16 overflow-hidden rounded-2xl border border-border/60">
-                <img
+                <Image
                   src={providerSection.profilePhoto}
                   alt="Uploaded preview"
-                  className="h-full w-full object-cover"
+                  fill
+                  className="object-cover"
+                  unoptimized
                 />
               </div>
             )}
