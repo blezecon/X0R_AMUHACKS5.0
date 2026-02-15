@@ -130,7 +130,7 @@ export function Navbar() {
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setIsDropdownOpen((prev) => !prev)}
-                  className="transition-transform hover:translate-y-0.5"
+                  className="transition-transform hover:translate-y-0.5 cursor-pointer"
                   aria-haspopup="true"
                   aria-expanded={isDropdownOpen}
                 >
@@ -157,7 +157,7 @@ export function Navbar() {
                     ))}
                     <button
                       onClick={handleLogout}
-                      className="mt-2 flex w-full items-center gap-2 rounded-md border border-border px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide text-destructive shadow-sm shadow-destructive/10"
+                      className="mt-2 flex w-full items-center gap-2 rounded-md border border-border px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide text-destructive shadow-sm shadow-destructive/10 cursor-pointer"
                     >
                       <LogOut className="h-4 w-4" />
                       Logout
@@ -182,7 +182,7 @@ export function Navbar() {
           </div>
 
           <button
-            className="md:hidden p-2 rounded-md hover:bg-accent"
+            className="md:hidden p-2 rounded-md hover:bg-accent cursor-pointer"
             onClick={() => setIsMenuOpen((prev) => !prev)}
           >
             {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -213,7 +213,7 @@ export function Navbar() {
                       handleLogout();
                       setIsMenuOpen(false);
                     }}
-                    className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-left text-sm font-medium text-destructive"
+                    className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-left text-sm font-medium text-destructive cursor-pointer"
                   >
                     <LogOut className="h-4 w-4" />
                     Logout

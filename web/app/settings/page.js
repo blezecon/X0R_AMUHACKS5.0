@@ -251,7 +251,7 @@ export default function SettingsPage() {
             <button
               type="button"
               onClick={() => router.push('/dashboard')}
-              className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground transition hover:text-foreground"
+              className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground transition hover:text-foreground cursor-pointer"
             >
               <SettingsIcon className="h-4 w-4" />
               Dashboard
@@ -280,7 +280,7 @@ export default function SettingsPage() {
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                       <label
                         htmlFor="photo-upload"
-                        className="flex items-center gap-2 rounded-2xl border border-dashed border-border/70 bg-background/70 px-4 py-3 text-sm font-medium text-foreground transition hover:border-primary"
+                        className="flex items-center gap-2 rounded-2xl border border-dashed border-border/70 bg-background/70 px-4 py-3 text-sm font-medium text-foreground transition hover:border-primary cursor-pointer"
                       >
                         <Camera className="h-5 w-5" />
                         <span>Upload photo</span>
@@ -297,7 +297,7 @@ export default function SettingsPage() {
                           <button
                             type="button"
                             onClick={handlePhotoRemove}
-                            className="absolute right-1 top-1 rounded-full bg-card/80 p-1 text-muted-foreground"
+                            className="absolute right-1 top-1 rounded-full bg-card/80 p-1 text-muted-foreground cursor-pointer"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
@@ -340,7 +340,7 @@ export default function SettingsPage() {
                           key={key}
                           type="button"
                           onClick={() => handleProviderSelect(key)}
-                          className={`flex flex-col gap-1 rounded-2xl border p-4 text-left transition ${
+                          className={`flex flex-col gap-1 rounded-2xl border p-4 text-left transition cursor-pointer ${
                             isSelected
                               ? 'border-primary/80 bg-primary/10 shadow-lg shadow-primary/30'
                               : 'border-border/40 bg-background/60 hover:border-primary/70'
@@ -374,7 +374,7 @@ export default function SettingsPage() {
                         type="button"
                         onClick={toggleShowKey}
                         aria-label={showKey ? 'Hide API key' : 'Show API key'}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary/70"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary/70 cursor-pointer"
                         disabled={providerLoading}
                       >
                         {showKey ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}

@@ -496,7 +496,7 @@ export default function OnboardingPage() {
                 key={option.value}
                 type="button"
                 onClick={() => setProviderSection((prev) => ({ ...prev, provider: option.value }))}
-                className={`flex h-full flex-col justify-between rounded-2xl border p-4 text-left transition hover:border-primary/70 ${
+                className={`flex h-full flex-col justify-between rounded-2xl border p-4 text-left transition hover:border-primary/70 cursor-pointer ${
                   isSelected
                     ? 'border-primary bg-linear-to-br from-primary/20 to-primary/10 shadow-lg'
                     : 'border-border/60 bg-background/70'
@@ -593,7 +593,7 @@ export default function OnboardingPage() {
               type="button"
               key={option}
               onClick={() => toggleMultiSelect(sectionKey, field, option, limit, exclusiveValue)}
-              className={getPillClass(selected.includes(option))}
+              className={`${getPillClass(selected.includes(option))} cursor-pointer`}
             >
               {option}
             </button>
