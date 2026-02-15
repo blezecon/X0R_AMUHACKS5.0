@@ -438,14 +438,18 @@ export default function DashboardPage() {
                           </Badge>
                         </div>
                         <p className="mt-2 text-sm font-semibold text-foreground">
-                          {item.aiSuggestion || item.options?.[0] || 'Suggestion'}
+                          {item.chosenOption || item.aiSuggestion || item.options?.[0] || 'Suggestion'}
                         </p>
-                        <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+                        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
                           <span className="flex items-center gap-2">
                             <Clock3 className="h-3.5 w-3.5" />
                             {formatDate(item.createdAt)}
                           </span>
-                          <span>{Math.round((item.confidence || 0) * 100)}% confidence</span>
+                          <span className="flex items-center gap-2">
+                            {item.rating && `Rating ${item.rating}/5`}
+                            {item.rating && <span className="text-muted-foreground/60">•</span>}
+                            {`${Math.round((item.confidence || 0) * 100)}% confidence`}
+                          </span>
                         </div>
                       </div>
                     ))}

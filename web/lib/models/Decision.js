@@ -39,6 +39,16 @@ const DecisionSchema = new mongoose.Schema({
     min: 0,
     max: 1
   },
+  chosenOption: {
+    type: String,
+    default: null
+  },
+  rating: {
+    type: Number,
+    min: 1,
+    max: 5,
+    default: null
+  },
   createdAt: {
     type: Date,
     default: Date.now

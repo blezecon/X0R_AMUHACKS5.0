@@ -10,7 +10,11 @@ export function calculateConfidence(preferences, option, type) {
     ? Object.fromEntries(typePrefs)
     : typePrefs;
   const rawScore = plainPrefs[option];
-  const score = Number.isFinite(rawScore) ? rawScore : 0;
+  const score = Number.isFinite(rawScore) ? rawScore : null;
+
+  if (score === null) {
+    return 0.5; // Default medium confidence when no preference exists
+  }
 
   // Normalize: assume max score of 10 for 100% confidence
   return Math.min(score / 10, 1);

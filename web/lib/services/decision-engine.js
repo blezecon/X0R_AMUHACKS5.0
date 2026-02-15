@@ -56,10 +56,7 @@ export async function getRecommendation(userId, type, context, question) {
 
   // Calculate confidence
   const primaryOption = options[0];
-  const baseConfidence = calculateConfidence(preferences, primaryOption, type);
-  const confidence = aiSuggestionData?.suggestion
-    ? Math.max(0.7, baseConfidence)
-    : baseConfidence;
+  const confidence = calculateConfidence(preferences, primaryOption, type);
 
   const decisionQuestion = question?.trim() || (
     type === 'meal' ? 'What should I eat today?' :
@@ -114,6 +111,10 @@ export async function recordFeedback(userId, decisionId, chosenOption, rating) {
 
   await feedback.save();
 
+  decision.chosenOption = chosenOption;
+  decision.rating = rating;
+  await decision.save();
+
   const user = await User.findById(userId);
   const currentPrefs = user.preferences || { meal: {}, task: {}, clothing: {} };
   if (!currentPrefs.clothing) currentPrefs.clothing = {};
@@ -163,19 +164,43 @@ export async function getUserStats(userId) {
 
 export async function getUserHistory(userId, limit = 10) {
   await connectDB();
+  const user = await User.findById(userId);
+  const userPrefs = user?.preferences || {};
   const history = await Decision.find({ userId })
     .sort({ createdAt: -1 })
     .limit(limit)
     .lean();
 
-  return history.map((decision) => ({
-    decisionId: decision._id.toString(),
-    type: decision.type,
-    question: decision.question,
-    aiSuggestion: decision.aiSuggestion,
-    options: decision.options,
-    confidence: decision.confidence,
-    providerUsed: decision.providerUsed,
-    createdAt: decision.createdAt
-  }));
+  const decisionIds = history.map((decision) => decision._id.toString());
+  const feedbacks = await Feedback.find({ userId, decisionId: { $in: decisionIds } })
+    .sort({ createdAt: -1 })
+    .lean();
+  const feedbackByDecision = feedbacks.reduce((acc, feedback) => {
+    if (!acc[feedback.decisionId]) {
+      acc[feedback.decisionId] = feedback;
+    }
+    return acc;
+  }, {});
+
+  return history.map((decision) => {
+    const decisionId = decision._id.toString();
+    const feedback = feedbackByDecision[decisionId];
+    const chosenOption = decision.chosenOption || feedback?.chosenOption || null;
+    const rating = decision.rating || feedback?.rating || null;
+    const confidenceTarget = chosenOption || decision.options?.[0] || decision.aiSuggestion;
+    const confidence = calculateConfidence(userPrefs, confidenceTarget, decision.type);
+
+    return {
+      decisionId,
+      type: decision.type,
+      question: decision.question,
+      aiSuggestion: decision.aiSuggestion,
+      options: decision.options,
+      confidence,
+      providerUsed: decision.providerUsed,
+      chosenOption,
+      rating,
+      createdAt: decision.createdAt
+    };
+  });
 }
