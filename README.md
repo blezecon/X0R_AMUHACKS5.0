@@ -387,4 +387,3 @@ Built for **AMUHACKS 5.0 Hackathon** by Team X0R.
 5. **Test on mobile** - The app is fully responsive!
 
 ---
-peaush
